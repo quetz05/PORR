@@ -303,7 +303,7 @@ namespace PORR
 		clearMatrix();
 
 		//int nextNode = firstNode;
-		std::list<int> toRelax;
+		toRelax.clear();
 		toRelax.push_back(0);
 
 		while (!toRelax.empty())
@@ -341,7 +341,7 @@ namespace PORR
 		clearMatrix();
 
 		//int nextNode = firstNode;
-		std::list<int> toRelax;
+		toRelax.clear();
 		toRelax.push_back(0);
 
 		while (!toRelax.empty())
@@ -388,7 +388,7 @@ namespace PORR
 		clearMatrix();
 
 		//int nextNode = firstNode;
-		std::list<int> toRelax;
+		toRelax.clear();
 		toRelax.push_back(0);
 
 		while (!toRelax.empty())
@@ -453,7 +453,7 @@ namespace PORR
 		clearMatrix();
 
 		//int nextNode = firstNode;
-		std::list<int> toRelax;
+		toRelax.clear();
 		toRelax.push_back(0);
 
 		while (!toRelax.empty())
@@ -531,15 +531,15 @@ namespace PORR
 			}
 		}
 
-		//std::cout << "DIJKSTRA TABLE: " << std::endl;
+		std::cout << "DIJKSTRA TABLE: " << std::endl;
 
-		//for (auto x : Matrix)
-		//	std::cout << x.first << " ";
-		//std::cout << std::endl;
-		//for (auto x : Matrix)
-		//	std::cout << x.second << " ";
+		for (auto x : Matrix)
+			std::cout << x.first << " ";
+		std::cout << std::endl;
+		for (auto x : Matrix)
+			std::cout << x.second << " ";
 
-		//std::cout << std::endl;
+		std::cout << std::endl;
 	}
 
 
@@ -631,8 +631,88 @@ namespace PORR
 				}
 				matrixLock[x.first].unlock();
 			}
+		}	
+	}
+
+	void Algorithm::SLFLLLParallel(int threadsNo)
+	{
+		clearMatrix();
+		std::vector<thread*> threads(threadsNo, nullptr);
+		std::vector<int> minimals(threadsNo);
+		int threadIter = (int)graph.size() / threadsNo;
+		delete[] matrixLock;
+		matrixLock = new mutex[graph.getSize()];
+		toRelax.clear();
+		toRelax.push_back(0);
+
+		while (!toRelax.empty())
+		{
+			int i = toRelax.front();
+			toRelax.pop_front();
+
+			for (int i = 0; i < threadsNo; i++)
+			{
+				delete threads[i];
+				threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this, i * threadIter, threadIter);
+			}
+
+			for (auto x : threads)
+				x->join();
 		}
-		
+
+		//std::cout << "SLF-LLL TABLE: " << std::endl;
+
+		//for (auto x : Matrix)
+		//	std::cout << x.first << " ";
+		//std::cout << std::endl;
+		//for (auto x : Matrix)
+		//	std::cout << x.second << " ";
+
+		//std::cout << std::endl;
+	}
+
+	void Algorithm::SLFLLLThreadWork(int first, int count)
+	{
+		for (int i = first; i < first + count; i++)
+			for (auto x : graph[i].connectionsTo)
+			{
+				int currentWeight = Matrix[i].first;
+
+				if (Matrix[x.first].first > currentWeight + x.second.weight)
+				{
+					matrixLock[x.first].lock();
+
+					Matrix[x.first].first = currentWeight + x.second.weight;
+					Matrix[x.first].second = i;
+
+					matrixLock[x.first].unlock();
+
+					qLock.lock();
+					if (std::find(toRelax.begin(), toRelax.end(), x.first) == toRelax.end())
+						toRelax.push_back(x.first);
+
+					int average = 0;
+					for (int v : toRelax)
+						average += v;
+					average = average / (int)toRelax.size();
+										
+
+					if (Matrix[toRelax.back()] < Matrix[toRelax.front()])
+					{
+						int temp = toRelax.back();
+						toRelax.pop_back();
+						toRelax.push_front(temp);
+					}
+
+					while (toRelax.front() > average)
+					{
+						int temp = toRelax.front();
+						toRelax.pop_front();
+						toRelax.push_back(temp);
+					}
+					qLock.unlock();
+				}
+			}
 	}
 };
 
