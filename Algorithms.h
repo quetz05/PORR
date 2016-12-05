@@ -34,7 +34,7 @@ namespace PORR
 		void DijkstraThreadWork();
 
 		void SLFLLLParallel(int threadsNo = 1);
-		void SLFLLLThreadWork(int first, int count);
+		void SLFLLLThreadWork();
 
 	private:
 		Graph graph;	
