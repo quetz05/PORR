@@ -4,6 +4,8 @@
 #include <deque>
 #include <mutex>
 #include <list>
+#include <atomic>
+#include <limits>
 
 namespace PORR
 {

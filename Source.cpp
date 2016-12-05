@@ -8,9 +8,10 @@ using namespace std;
 
 int main()
 {
+	Graph graph("graph0.txt");
 	//Graph graph("result16.txt");
 	//Graph graph("result128.txt");
-	Graph graph("result800.txt");
+	//Graph graph("result800.txt");
 	//Graph graph("result2400.txt");
 	//Graph graph("result3200.txt");
 	Algorithm algo(graph);
@@ -100,7 +101,7 @@ int main()
 	start = std::chrono::high_resolution_clock::now();
 	algo.SLFLLLParallel(16);
 	end = std::chrono::high_resolution_clock::now();
-	std::cout << "SFLLLL 116: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+	std::cout << "SFLLLL 16: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
 	cout << endl;
 
 	std::cin.get();
