@@ -595,15 +595,15 @@ namespace PORR
 		for (auto x : threads)
 			delete x;
 
-		std::cout << "DIJKSTRA [" + std::to_string(threadsNo)  + " threads] TABLE: " << std::endl;
+		//std::cout << "DIJKSTRA [" + std::to_string(threadsNo)  + " threads] TABLE: " << std::endl;
 
-		for (auto x : Matrix)
-			std::cout << x.first << " ";
-		std::cout << std::endl;
-		for (auto x : Matrix)
-			std::cout << x.second << " ";
+		//for (auto x : Matrix)
+		//	std::cout << x.first << " ";
+		//std::cout << std::endl;
+		//for (auto x : Matrix)
+		//	std::cout << x.second << " ";
 
-		std::cout << std::endl;
+		//std::cout << std::endl;
 	}
 
 	void Algorithm::DijkstraThreadWork()
@@ -663,39 +663,15 @@ namespace PORR
 		for (auto x : threads)
 			delete x;
 
-		//clearMatrix();
-		//std::vector<thread*> threads(threadsNo, nullptr);
-		//std::vector<int> minimals(threadsNo);
-		//int threadIter = (int)graph.size() / threadsNo;
-		//delete[] matrixLock;
-		//matrixLock = new mutex[graph.getSize()];
-		//toRelax.clear();
-		//toRelax.push_back(0);
+		//std::cout << "SLF-LLL TABLE: " << std::endl;
 
-		//while (!toRelax.empty())
-		//{
-		//	int i = toRelax.front();
-		//	toRelax.pop_front();
+		//for (auto x : Matrix)
+		//	std::cout << x.first << " ";
+		//std::cout << std::endl;
+		//for (auto x : Matrix)
+		//	std::cout << x.second << " ";
 
-		//	for (int i = 0; i < threadsNo; i++)
-		//	{
-		//		delete threads[i];
-		//		threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this, i * threadIter, threadIter);
-		//	}
-
-		//	for (auto x : threads)
-		//		x->join();
-		//}
-
-		std::cout << "SLF-LLL TABLE: " << std::endl;
-
-		for (auto x : Matrix)
-			std::cout << x.first << " ";
-		std::cout << std::endl;
-		for (auto x : Matrix)
-			std::cout << x.second << " ";
-
-		std::cout << std::endl;
+		//std::cout << std::endl;
 	}
 
 	void Algorithm::SLFLLLThreadWork()
@@ -713,7 +689,7 @@ namespace PORR
 			toRelax.pop_front();
 			qLock.unlock();
 
-		for (int i = 0; i < graph.getSize(); i++)
+		//for (int i = 0; i < graph.getSize(); i++)
 			for (auto x : graph[i].connectionsTo)
 			{
 				int currentWeight = Matrix[i].first;
@@ -742,11 +718,13 @@ namespace PORR
 					qLock.lock();
 					if (Matrix[toRelax.back()] < Matrix[toRelax.front()])
 					{
+						matrixLock[x.first].unlock();
 						int temp = toRelax.back();
 						toRelax.pop_back();
 						toRelax.push_front(temp);
-						qLock.unlock();
 					}
+					else
+						matrixLock[x.first].unlock();
 
 					while (toRelax.front() > average)
 					{
@@ -755,8 +733,10 @@ namespace PORR
 						toRelax.push_back(temp);
 					}
 					qLock.unlock();
-					matrixLock[x.first].unlock();
+					
 				}
+				else
+					matrixLock[x.first].unlock();
 			}
 		}
 	}
