@@ -454,7 +454,10 @@ namespace PORR
 
 		//int nextNode = firstNode;
 		toRelax.clear();
-		toRelax.push_back(0);
+		//toRelax.push_back(0);
+
+		for (int j = 0; j < graph.getSize(); j++)
+			toRelax.push_back(j);
 
 		while (!toRelax.empty())
 		{
@@ -646,7 +649,7 @@ namespace PORR
 		toRelax.clear();
 
 		for (int j = 0; j < graph.getSize(); j++)
-			Q.push_back(j);
+			toRelax.push_back(j);
 
 		for (int i = 0; i < threadsNo; i++)
 		{
