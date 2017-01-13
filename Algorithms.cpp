@@ -575,6 +575,9 @@ namespace PORR
 
 	void Algorithm::DijkstraParallel(int threadsNo)
 	{
+		std::chrono::high_resolution_clock::time_point start;
+		std::chrono::high_resolution_clock::time_point end;
+
 		clearMatrix();
 		delete[] matrixLock;
 		matrixLock = new mutex[graph.getSize()];
@@ -584,6 +587,11 @@ namespace PORR
 		for (int j = 0; j < graph.getSize(); j++)
 			Q.push_back(j);
 
+
+		start = std::chrono::high_resolution_clock::now();
+		
+
+
 		for (int i = 0; i < threadsNo; i++)
 		{
 			threads[i] = new thread(&Algorithm::DijkstraThreadWork, this);
@@ -591,6 +599,11 @@ namespace PORR
 
 		for (auto x : threads)
 				x->join();
+
+		end = std::chrono::high_resolution_clock::now();
+
+		std::cout << "dijkstra " << threadsNo << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+		cout << endl;
 
 		for (auto x : threads)
 			delete x;
@@ -639,26 +652,39 @@ namespace PORR
 
 	void Algorithm::SLFLLLParallel(int threadsNo)
 	{
-
+		std::chrono::high_resolution_clock::time_point start;
+		std::chrono::high_resolution_clock::time_point end;
 		clearMatrix();
 		std::vector<thread*> threads(threadsNo, nullptr);
 		std::vector<int> minimals(threadsNo);
 		int threadIter = (int)graph.size() / threadsNo;
-		delete[] matrixLock;
-		matrixLock = new mutex[graph.getSize()];
-		toRelax.clear();
+		delete[] toRelaxTab;
+		toRelaxTab = new std::list<int>[threadsNo];
 
+		int x = 0;
 		for (int j = 0; j < graph.getSize(); j++)
-			toRelax.push_back(j);
+		{
+			toRelaxTab[x].push_back(j);
+			if (((x+1) * threadIter - 1) == j)
+				x++;
+		}
+		
 
+		start = std::chrono::high_resolution_clock::now();
 		for (int i = 0; i < threadsNo; i++)
 		{
-			delete threads[i];
-			threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this);
+			//delete threads[i];
+			threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this, Matrix, toRelaxTab[i]);
 		}
 
 		for (auto x : threads)
 			x->join();
+
+		end = std::chrono::high_resolution_clock::now();
+
+
+		std::cout << "SFLLLL " << threadsNo << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+		cout << endl;
 
 		for (auto x : threads)
 			delete x;
@@ -674,69 +700,54 @@ namespace PORR
 		//std::cout << std::endl;
 	}
 
-	void Algorithm::SLFLLLThreadWork()
+	void Algorithm::SLFLLLThreadWork(std::vector<std::pair<int, int>> matrix, std::list<int> queue)
 	{
-		while (!toRelax.empty())
+		while (!queue.empty())
 		{
-			qLock.lock();
-			if (toRelax.empty())
-			{
-				qLock.unlock();
-				return;
-			}
-
-			int i = toRelax.front();
-			toRelax.pop_front();
-			qLock.unlock();
+			int i = queue.front();
+			queue.pop_front();
+			//qLock.unlock();
 
 		//for (int i = 0; i < graph.getSize(); i++)
 			for (auto x : graph[i].connectionsTo)
 			{
-				int currentWeight = Matrix[i].first;
+				int currentWeight = matrix[i].first;
 
-				matrixLock[x.first].lock();
-				if (Matrix[x.first].first > currentWeight + x.second.weight)
+				if (matrix[x.first].first > currentWeight + x.second.weight)
 				{
-					Matrix[x.first].first = currentWeight + x.second.weight;
-					Matrix[x.first].second = i;
+					matrix[x.first].first = currentWeight + x.second.weight;
+					matrix[x.first].second = i;
 
-					qLock.lock();
-					if (std::find(toRelax.begin(), toRelax.end(), x.first) == toRelax.end())
+					//qLock.lock();
+					if (std::find(queue.begin(), queue.end(), x.first) == queue.end())
 					{
-						toRelax.push_back(x.first);
-						qLock.unlock();
+						queue.push_back(x.first);
+						//qLock.unlock();
 					}
-					else
-						qLock.unlock();
 
 
 					int average = 0;
-					for (int v : toRelax)
+					for (int v : queue)
 						average += v;
-					average = average / (int)toRelax.size();
+					average = average / (int)queue.size();
 
-					qLock.lock();
-					if (Matrix[toRelax.back()] < Matrix[toRelax.front()])
+					//qLock.lock();
+					if (matrix[queue.back()] < matrix[queue.front()])
 					{
-						matrixLock[x.first].unlock();
-						int temp = toRelax.back();
-						toRelax.pop_back();
-						toRelax.push_front(temp);
+						int temp = queue.back();
+						queue.pop_back();
+						queue.push_front(temp);
 					}
-					else
-						matrixLock[x.first].unlock();
 
-					while (toRelax.front() > average)
+					while (queue.front() > average)
 					{
-						int temp = toRelax.front();
-						toRelax.pop_front();
-						toRelax.push_back(temp);
+						int temp = queue.front();
+						queue.pop_front();
+						queue.push_back(temp);
 					}
-					qLock.unlock();
+					//qLock.unlock();
 					
 				}
-				else
-					matrixLock[x.first].unlock();
 			}
 		}
 	}

@@ -34,11 +34,12 @@ namespace PORR
 		void DijkstraThreadWork();
 
 		void SLFLLLParallel(int threadsNo = 1);
-		void SLFLLLThreadWork();
+		void SLFLLLThreadWork(std::vector<std::pair<int, int>> matrix, std::list<int> queue);
 
 	private:
 		Graph graph;	
 		std::list<int> toRelax;
+		std::list<int>* toRelaxTab;
 		void clearMatrix();
 		std::vector<std::pair<int, int>> Matrix;
 		std::deque<int> Q;
