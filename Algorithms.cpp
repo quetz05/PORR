@@ -733,25 +733,24 @@ namespace PORR
 
 					if (std::find(queue.begin(), queue.end(), x.first) == queue.end())
 					{
-						if (Matrix[x.first] < Matrix[queue.front()])
+						if (queue.empty() || Matrix[x.first] < Matrix[queue.front()])
 							queue.push_front(x.first);
 						else
 							queue.push_back(x.first);					
 					}
 
 
-					//int average = 0;
-					//for (int v : queue)
-					//	average += v;
-					//average = average / (int)queue.size();
+					int average = 0;
+					for (int v : queue)
+						average += Matrix[v].first;
+					average = average / (int)queue.size();
 
-
-					//while (queue.front() > average)
-					//{
-					//	int temp = queue.front();
-					//	queue.pop_front();
-					//	queue.push_back(temp);
-					//}
+					while (Matrix[queue.front()].first > average)
+					{
+						int temp = queue.front();
+						queue.pop_front();
+						queue.push_back(temp);
+					}
 					
 				}
 			}
