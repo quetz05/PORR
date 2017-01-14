@@ -13,8 +13,8 @@ int main()
 	//Graph graph("result128.txt");
 	//Graph graph("result800.txt");
 	//Graph graph("result2400.txt");
-	Graph graph("result3200.txt");
-	//Graph graph("result4000.txt");
+	//Graph graph("result3200.txt");
+	Graph graph("result4000.txt");
 	Algorithm algo(graph);
 
 

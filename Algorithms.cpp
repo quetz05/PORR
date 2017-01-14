@@ -711,7 +711,7 @@ namespace PORR
 		//std::cout << std::endl;
 	}
 
-	void Algorithm::SLFLLLThreadWork(std::list<int> queue)
+	void Algorithm::SLFLLLThreadWork(std::list<int>& queue)
 	{
 		Matrix[queue.front()].first = 0;
 
@@ -733,28 +733,25 @@ namespace PORR
 
 					if (std::find(queue.begin(), queue.end(), x.first) == queue.end())
 					{
-						queue.push_back(x.first);
+						if (Matrix[x.first] < Matrix[queue.front()])
+							queue.push_front(x.first);
+						else
+							queue.push_back(x.first);					
 					}
 
 
-					int average = 0;
-					for (int v : queue)
-						average += v;
-					average = average / (int)queue.size();
+					//int average = 0;
+					//for (int v : queue)
+					//	average += v;
+					//average = average / (int)queue.size();
 
-					if (Matrix[queue.back()] < Matrix[queue.front()])
-					{
-						int temp = queue.back();
-						queue.pop_back();
-						queue.push_front(temp);
-					}
 
-					while (queue.front() > average)
-					{
-						int temp = queue.front();
-						queue.pop_front();
-						queue.push_back(temp);
-					}
+					//while (queue.front() > average)
+					//{
+					//	int temp = queue.front();
+					//	queue.pop_front();
+					//	queue.push_back(temp);
+					//}
 					
 				}
 			}
