@@ -12,8 +12,8 @@ int main()
 	//Graph graph("result16.txt");
 	//Graph graph("result128.txt");
 	//Graph graph("result800.txt");
-	Graph graph("result2400.txt");
-	//Graph graph("result3200.txt");
+	//Graph graph("result2400.txt");
+	Graph graph("result3200.txt");
 	//Graph graph("result4000.txt");
 	Algorithm algo(graph);
 
@@ -31,7 +31,7 @@ int main()
 	//algo.SLFLLLParallel(8);
 	//algo.SLFLLLParallel(16);
 
-		// dijkstra 1
+		//// dijkstra 1
 		algo.DijkstraParallel(1);
 
 		// dijkstra 2
@@ -60,6 +60,8 @@ int main()
 
 		// SFLLLL 16
 		algo.SLFLLLParallel(16);
+
+		cin.get();
 
 	return 0;
 }

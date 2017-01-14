@@ -632,21 +632,26 @@ namespace PORR
 			}
 
 			int i = getMinFromMatrix(Q);
-			Q.erase(std::find(Q.begin(), Q.end(), i));
-			qLock.unlock();
-
-			int currentWeight = Matrix[i].first;
-
-			for (auto x : graph[i].connectionsTo)
+			if (i != -1)
 			{
-				matrixLock[x.first].lock();
-				if (Matrix[x.first].first > currentWeight + x.second.weight)
+				Q.erase(std::find(Q.begin(), Q.end(), i));
+				qLock.unlock();
+
+				int currentWeight = Matrix[i].first;
+
+				for (auto x : graph[i].connectionsTo)
 				{
-					Matrix[x.first].first = currentWeight + x.second.weight;
-					Matrix[x.first].second = i;
+					matrixLock[x.first].lock();
+					if (Matrix[x.first].first > currentWeight + x.second.weight)
+					{
+						Matrix[x.first].first = currentWeight + x.second.weight;
+						Matrix[x.first].second = i;
+					}
+					matrixLock[x.first].unlock();
 				}
-				matrixLock[x.first].unlock();
 			}
+			else
+				qLock.unlock();
 		}	
 	}
 
@@ -662,19 +667,25 @@ namespace PORR
 		toRelaxTab = new std::list<int>[threadsNo];
 
 		int x = 0;
-		for (int j = 0; j < graph.getSize(); j++)
-		{
-			toRelaxTab[x].push_back(j);
-			if (((x+1) * threadIter - 1) == j)
-				x++;
-		}
+		//for (int j = 0; j < graph.getSize(); j++)
+		//{
+		//	toRelaxTab[x].push_back(j);
+		//	if (((x+1) * threadIter - 1) == j)
+		//		x++;
+		//}
 		
+		for (int j = 0; j < threadsNo; j++)
+		{
+			toRelaxTab[j].push_back(j);
+			//if (((x+1) * threadIter - 1) == j)
+			//	x++;
+		}
 
 		start = std::chrono::high_resolution_clock::now();
 		for (int i = 0; i < threadsNo; i++)
 		{
 			//delete threads[i];
-			threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this, Matrix, toRelaxTab[i]);
+			threads[i] = new thread(&Algorithm::SLFLLLThreadWork, this, toRelaxTab[i]);
 		}
 
 		for (auto x : threads)
@@ -700,8 +711,10 @@ namespace PORR
 		//std::cout << std::endl;
 	}
 
-	void Algorithm::SLFLLLThreadWork(std::vector<std::pair<int, int>> matrix, std::list<int> queue)
+	void Algorithm::SLFLLLThreadWork(std::list<int> queue)
 	{
+		Matrix[queue.front()].first = 0;
+
 		while (!queue.empty())
 		{
 			int i = queue.front();
@@ -711,18 +724,16 @@ namespace PORR
 		//for (int i = 0; i < graph.getSize(); i++)
 			for (auto x : graph[i].connectionsTo)
 			{
-				int currentWeight = matrix[i].first;
+				int currentWeight = Matrix[i].first;
 
-				if (matrix[x.first].first > currentWeight + x.second.weight)
+				if (Matrix[x.first].first > currentWeight + x.second.weight)
 				{
-					matrix[x.first].first = currentWeight + x.second.weight;
-					matrix[x.first].second = i;
+					Matrix[x.first].first = currentWeight + x.second.weight;
+					Matrix[x.first].second = i;
 
-					//qLock.lock();
 					if (std::find(queue.begin(), queue.end(), x.first) == queue.end())
 					{
 						queue.push_back(x.first);
-						//qLock.unlock();
 					}
 
 
@@ -731,8 +742,7 @@ namespace PORR
 						average += v;
 					average = average / (int)queue.size();
 
-					//qLock.lock();
-					if (matrix[queue.back()] < matrix[queue.front()])
+					if (Matrix[queue.back()] < Matrix[queue.front()])
 					{
 						int temp = queue.back();
 						queue.pop_back();
@@ -745,7 +755,6 @@ namespace PORR
 						queue.pop_front();
 						queue.push_back(temp);
 					}
-					//qLock.unlock();
 					
 				}
 			}

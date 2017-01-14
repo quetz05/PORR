@@ -34,7 +34,7 @@ namespace PORR
 		void DijkstraThreadWork();
 
 		void SLFLLLParallel(int threadsNo = 1);
-		void SLFLLLThreadWork(std::vector<std::pair<int, int>> matrix, std::list<int> queue);
+		void SLFLLLThreadWork(std::list<int> queue);
 
 	private:
 		Graph graph;	
